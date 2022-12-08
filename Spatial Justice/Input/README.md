@@ -4,12 +4,12 @@ The following tables contain detail descriptions of each of the variables in the
 # Density Variables
 <table>
     <tr>
-        <td>Density Variables</td>
+        # Density Variables
     </tr>
     <tr>
-        <td>Variable</td>
-        <td>Variable Column Header</td>
-        <td>Definition</td>
+        <td># Variable</td>
+        <td># Variable Column Header</td>
+        <td># Definition</td>
     </tr>
     <tr>
         <td>Density of Grocery Stores</td>
