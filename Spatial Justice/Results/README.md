@@ -136,3 +136,93 @@ The following tables contain detailed descriptions of each of the components as 
         <td>Component 9</td>
     </tr>
 </table>
+
+## Proximity Components
+<table>
+    <tr>
+        <td>Unstandardized</td>
+        <td>Proximity_PCA1</td>
+        <td>Component 1</td>
+    </tr>
+    <tr>
+        <td>Unstandardized</td>
+        <td>Proximity_PCA2</td>
+        <td>Component 2</td>
+    </tr>
+    <tr>
+        <td>Standardized</td>
+        <td>stnd_Proximity_PCA1</td>
+        <td>Component 1</td>
+    </tr>
+    <tr>
+        <td>Standardized</td>
+        <td>stnd_Proximity_PCA2</td>
+        <td>Component 2</td>
+    </tr>
+</table>
+## Diversity Components
+<table>
+    <tr>
+        <td>Unstandardized</td>
+        <td>Diversity_PCA1</td>
+        <td>Component 1</td>
+    </tr>
+    <tr>
+        <td>Unstandardized</td>
+        <td>Diversity_PCA2</td>
+        <td>Component 2</td>
+    </tr>
+    <tr>
+        <td>Standardized</td>
+        <td>stnd_Diversity_PCA1</td>
+        <td>Component 1</td>
+    </tr>
+    <tr>
+        <td>Standardized</td>
+        <td>stnd_Diversity_PCA2</td>
+        <td>Component 2</td>
+    </tr>
+</table>
+## Connectivity Components
+<table>
+    <tr>
+        <td>Unstandardized</td>
+        <td>Connectivity_PCA1</td>
+        <td>Component 1</td>
+    </tr>
+    <tr>
+        <td>Unstandardized</td>
+        <td>Connectivity_PCA2</td>
+        <td>Component 2</td>
+    </tr>
+    <tr>
+        <td>Unstandardized</td>
+        <td>Connectivity_PCA3</td>
+        <td>Component 3</td>
+    </tr>
+    <tr>
+        <td>Unstandardized</td>
+        <td>Connectivity_PCA4</td>
+        <td>Component 4</td>
+    </tr>
+    <tr>
+        <td>Standardized</td>
+        <td>stnd_Connectivity_PCA1</td>
+        <td>Component 1</td>
+    </tr>
+    <tr>
+        <td>Standardized</td>
+        <td>stnd_Connectivity_PCA2</td>
+        <td>Component 2</td>
+    </tr>
+    <tr>
+        <td>Standardized</td>
+        <td>stnd_Connectivity_PCA3</td>
+        <td>Component 3</td>
+    </tr>
+    <tr>
+        <td>Standardized</td>
+        <td>stnd_Connectivity_PCA4</td>
+        <td>Component 4</td>
+    </tr>
+</table>
