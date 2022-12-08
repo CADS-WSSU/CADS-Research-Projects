@@ -160,6 +160,7 @@ The following tables contain detailed descriptions of each of the components as 
         <td>Component 2</td>
     </tr>
 </table>
+
 ## Diversity Components
 <table>
     <tr>
@@ -183,6 +184,7 @@ The following tables contain detailed descriptions of each of the components as 
         <td>Component 2</td>
     </tr>
 </table>
+
 ## Connectivity Components
 <table>
     <tr>
