@@ -99,3 +99,63 @@ The following tables contain detail descriptions of each of the variables in the
         <td>Count of the number of Jobs per sq mi</td>
     </tr>
 </table>
+
+# Proximity Variables
+
+<table>
+    <tr>
+        <td><b>Variable</b></td>
+        <td><b>Variable Column Header</b></td>
+        <td><b>Definition</b></td>
+    </tr>
+    <tr>
+        <td>Proximity to Nearest Grocery Store</td>
+        <td>NEAR_GROC</td>
+        <td>Distance from a census tract’s centroid to the closest grocery store</td>
+    </tr>
+    <tr>
+        <td>Proximity to Nearest Park/Rec Facility</td>
+        <td>NEAR_REC</td>
+        <td>Distance from a census tract’s centroid to the closest park/rec facility</td>
+    </tr>
+    <tr>
+        <td>Proximity to Nearest Hospital</td>
+        <td>NEAR_HOSPITALS</td>
+        <td>Distance from a census tract’s centroid to the closest hospital</td>
+    </tr>
+    <tr>
+        <td>Proximity to Nearest Medical Facility</td>
+        <td>NEAR_MED</td>
+        <td>Distance from a census tract’s centroid to the closest medical facility</td>
+    </tr>
+    <tr>
+        <td>Proximity to Nearest Public Library</td>
+        <td>NEAR_LIBRARY</td>
+        <td>Distance from a census tract’s centroid to the closest library</td>
+    </tr>
+    <tr>
+        <td>Proximity to Nearest Interstate</td>
+        <td>NEAR_INTST</td>
+        <td>Distance from a census tract’s centroid to the closest interstate</td>
+    </tr>
+    <tr>
+        <td>Proximity to Nearest Brownfield</td>
+        <td>NEAR_BRWN</td>
+        <td>Distance from a census tract’s centroid to the closest brownfield</td>
+    </tr>
+    <tr>
+        <td>Proximity to Nearest Hazardous Waste Site</td>
+        <td>NEAR_HAZ</td>
+        <td>Distance from a census tract’s centroid to the closest hazardous waste site</td>
+    </tr>
+    <tr>
+        <td>Proximity to Nearest Redlined Area</td>
+        <td>NEAR_RED</td>
+        <td>Distance from a census tract’s centroid to the closest redlined area</td>
+    </tr>
+    <tr>
+        <td>Proximity to Work</td>
+        <td>Pct_Commute_LessThan15Mins</td>
+        <td>Percent of workers with commutes less than 15 minutes</td>
+    </tr>
+</table>
