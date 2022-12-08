@@ -159,3 +159,68 @@ The following tables contain detail descriptions of each of the variables in the
         <td>Percent of workers with commutes less than 15 minutes</td>
     </tr>
 </table>
+
+# Diversity Variables
+
+<table>
+    <tr>
+        <td><b>Variable</b></td>
+        <td><b>Variable Column Header</b></td>
+        <td><b>Definition</b></td>
+    </tr>
+    <tr>
+        <td>Percent Impervious Surface</td>
+        <td>Percent_Impervious</td>
+        <td>Percent of land that is covered by impervious surfaces</td>
+    </tr>
+    <tr>
+        <td>Racial Segregation</td>
+        <td>IsoIndex_BW_2020</td>
+        <td>Measured as the Isolation Index between black and white residents</td>
+    </tr>
+    <tr>
+        <td>Housing Stock Diversity</td>
+        <td>SimpsonIndex_DivHouseStock</td>
+        <td>Measured as a Simpson’s Index of diversity across the Census defined housing structure types</td>
+    </tr>
+</table>
+
+# Connectivity Variables
+
+<table>
+    <tr>
+        <td><b>Variable</b></td>
+        <td><b>Variable Column Header</b></td>
+        <td><b>Definition</b></td>
+    </tr>
+    <tr>
+        <td>Street Connectivity</td>
+        <td>STREETCON</td>
+        <td>Gamma index measuring street connections</td>
+    </tr>
+    <tr>
+        <td>Internet Fiber</td>
+        <td>Pct_Pop_hasAccessFiber</td>
+        <td>Percent of households with access to fiber</td>
+    </tr>
+    <tr>
+        <td>Social Capital</td>
+        <td>Overall_SelfRespRate</td>
+        <td>Social capital, proxied with census return rates</td>
+    </tr>
+    <tr>
+        <td>Internet Providers</td>
+        <td>Percent_Pop_NoProvider</td>
+        <td>Percent of households without access to an internet provider</td>
+    </tr>
+    <tr>
+        <td>Transit Route</td>
+        <td>Transit_Route_Indicator</td>
+        <td>Indicator for whether a tract contains a public transit route</td>
+    </tr>
+    <tr>
+        <td>Interstate</td>
+        <td>Interstate_Present</td>
+        <td>Indicator for whether a tract contains an interstate access point</td>
+    </tr>
+</table>
