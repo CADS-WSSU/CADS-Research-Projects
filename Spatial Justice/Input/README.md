@@ -1,5 +1,6 @@
 #Data Description
 The following tables contain detail descriptions of each of the variables in the datasets.
+
 #Density Variables
 <table>
   <tbody>
