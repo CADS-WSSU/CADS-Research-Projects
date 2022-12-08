@@ -1,5 +1,5 @@
 # Data Description
-The following tables contain detail descriptions of each of the variables in the datasets.
+The following tables contain detailed descriptions of each of the variables in the datasets.
 
 # Density Variables
 <table>
