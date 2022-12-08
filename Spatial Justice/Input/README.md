@@ -3,13 +3,11 @@ The following tables contain detail descriptions of each of the variables in the
 
 # Density Variables
 <table>
-    <tr>
-        <b>Density Variables</b>
-    </tr>
+    
     <tr>
         <td><b>Variable</b></td>
-        <td># Variable Column Header</td>
-        <td># Definition</td>
+        <td><b>Variable Column Header</b></td>
+        <td><b>Definition</b></td>
     </tr>
     <tr>
         <td>Density of Grocery Stores</td>
