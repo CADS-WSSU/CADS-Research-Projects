@@ -1,7 +1,7 @@
-#Data Description
+# Data Description
 The following tables contain detail descriptions of each of the variables in the datasets.
 
-#Density Variables
+# Density Variables
 <table>
   <tbody>
     <tr> Density Variables </tr>
@@ -11,9 +11,14 @@ The following tables contain detail descriptions of each of the variables in the
       <th>Definition</th>
     </tr>
     <tr>
-      <td><a href="https://github.com/CADS-WSSU/2021-2022-Faculty-Adopter-Modules/tree/main/ART1301-Introduction-to-Art-Data-Science-Module">Introduction to Art</a></td>
       <td>
-        ART 1301 Introduction to Art
+        Density of Grocery Stores
+      </td>
+      <td>
+       GroceryStores_PerSqMi
+      </td>
+      <td>
+       Count of the number of grocery stores per sq mi
       </td>
     </tr>
     <tr>
