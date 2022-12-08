@@ -44,7 +44,7 @@ The following tables contain detailed descriptions of each of the components as 
 # Components
 
 <table>
-    <tr>
+    <tr style="text-align: center">
         Density Components
     </tr>
     <tr>
