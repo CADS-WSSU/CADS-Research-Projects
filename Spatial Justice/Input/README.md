@@ -3,7 +3,6 @@ The following tables contain detail descriptions of each of the variables in the
 
 # Density Variables
 <table>
-    
     <tr>
         <td><b>Variable</b></td>
         <td><b>Variable Column Header</b></td>
