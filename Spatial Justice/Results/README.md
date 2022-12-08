@@ -46,7 +46,6 @@ The following tables contain detailed descriptions of each of the components as 
 <table>
     <tr>
         Density Components
-        
     </tr>
     <tr>
         <td>Unstandardized</td>
