@@ -41,4 +41,101 @@ The following tables contain detailed descriptions of each of the components as 
     </tr>
 </table>
 
-#Component
+# Components
+
+<table>
+    <tr>
+        Density Components
+        
+    </tr>
+    <tr>
+        <td>Unstandardized</td>
+        <td>Density_PCA1</td>
+        <td>Component 1</td>
+    </tr>
+    <tr>
+        <td>Unstandardized</td>
+        <td>Density_PCA2</td>
+        <td>Component 2</td>
+    </tr>
+    <tr>
+        <td>Unstandardized</td>
+        <td>Density_PCA3</td>
+        <td>Component 3</td>
+    </tr>
+    <tr>
+        <td>Unstandardized</td>
+        <td>Density_PCA4</td>
+        <td>Component 4</td>
+    </tr>
+    <tr>
+        <td>Unstandardized</td>
+        <td>Density_PCA5</td>
+        <td>Component 5</td>
+    </tr>
+    <tr>
+        <td>Unstandardized</td>
+        <td>Density_PCA6</td>
+        <td>Component 6</td>
+    </tr>
+    <tr>
+        <td>Unstandardized</td>
+        <td>Density_PCA7</td>
+        <td>Component 7</td>
+    </tr>
+    <tr>
+        <td>Unstandardized</td>
+        <td>Density_PCA8</td>
+        <td>Component 8</td>
+    </tr>
+    <tr>
+        <td>Unstandardized</td>
+        <td>Density_PCA9</td>
+        <td>Component 9</td>
+    </tr>
+    <tr>
+        <td>Standardized</td>
+        <td>stnd_Density_PCA1</td>
+        <td>Component 1</td>
+    </tr>
+    <tr>
+        <td>Standardized</td>
+        <td>stnd_Density_PCA2</td>
+        <td>Component 2</td>
+    </tr>
+    <tr>
+        <td>Standardized</td>
+        <td>stnd_Density_PCA3</td>
+        <td>Component 3</td>
+    </tr>
+    <tr>
+        <td>Standardized</td>
+        <td>stnd_Density_PCA4</td>
+        <td>Component 4</td>
+    </tr>
+    <tr>
+        <td>Standardized</td>
+        <td>stnd_Density_PCA5</td>
+        <td>Component 5</td>
+    </tr>
+    <tr>
+        <td>Standardized</td>
+        <td>stnd_Density_PCA6</td>
+        <td>Component 6</td>
+    </tr>
+    <tr>
+        <td>Standardized</td>
+        <td>stnd_Density_PCA7</td>
+        <td>Component 7</td>
+    </tr>
+    <tr>
+        <td>Standardized</td>
+        <td>stnd_Density_PCA8</td>
+        <td>Component 8</td>
+    </tr>
+    <tr>
+        <td>Standardized</td>
+        <td>stnd_Density_PCA9</td>
+        <td>Component 9</td>
+    </tr>
+</table>
