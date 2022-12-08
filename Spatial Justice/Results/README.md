@@ -43,10 +43,8 @@ The following tables contain detailed descriptions of each of the components as 
 
 # Components
 
+## Density Components
 <table>
-    <tr style="text-align: center">
-        Density Components
-    </tr>
     <tr>
         <td>Unstandardized</td>
         <td>Density_PCA1</td>
