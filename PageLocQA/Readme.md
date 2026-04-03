@@ -16,7 +16,6 @@ This repository contains a **Streamlit-based chatbot** that enables users to que
 ## Installation
 
 1. Clone the repository:
-   - git clone https://github.com/CADS-WSSU/Research/PagelocQA.git
    - cd PagelocQA
 2. Create and activate a virtual environment:
    - python -m venv venv
