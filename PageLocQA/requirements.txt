@@ -2,7 +2,6 @@ streamlit
 pandas
 scikit-learn
 pdfplumber
-PyPDF2
 beautifulsoup4
 lxml
 python-dotenv
@@ -10,7 +9,10 @@ keybert
 sentence-transformers
 langchain
 langchain-community
-langchain-openai
+langchain-core
+langchain-text-splitters
 transformers
 torch
 faiss-cpu
+wikipedia
+requests
