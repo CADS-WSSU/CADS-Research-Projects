@@ -1,5 +1,6 @@
 # -------------------------------
-# Streamlit-based scientific QA chatbot
+# Streamlit-based scientific QA chatbot (PageLocQA)
+# Updated for LangChain >= 0.2 / langchain-community >= 0.2
 # -------------------------------
 
 # ===== Imports =====
@@ -8,15 +9,23 @@ from io import BytesIO
 import pdfplumber
 from bs4 import BeautifulSoup
 from langchain_community.vectorstores import FAISS
-from langchain.embeddings.base import Embeddings
-from langchain.agents import Tool
-from langchain.text_splitter import CharacterTextSplitter
+from langchain_core.embeddings import Embeddings
+from langchain_core.tools import Tool
+from langchain_text_splitters import CharacterTextSplitter
 from keybert import KeyBERT
 from sentence_transformers import CrossEncoder, SentenceTransformer
 from typing import List
-from langchain.tools import WikipediaQueryRun
-from langchain.utilities import WikipediaAPIWrapper
+from langchain_community.utilities import WikipediaAPIWrapper
+from langchain_community.tools import WikipediaQueryRun
 import requests
+
+import torch
+import transformers
+import sentence_transformers
+
+print(torch.__version__)
+print(transformers.__version__)
+print(sentence_transformers.__version__)
 
 wikipedia = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())
 
@@ -28,9 +37,9 @@ class OllamaLLM:
     def _call(self, prompt: str, stop=None):
         response = requests.post(
             "http://localhost:11434/api/generate",
-            json={"model":self.model,"prompt":prompt, "stream":False},
-            )
-        if response.status_code==200:
+            json={"model": self.model, "prompt": prompt, "stream": False},
+        )
+        if response.status_code == 200:
             return response.json().get("response", "")
         raise RuntimeError(f"Ollama LLM call failed: {response.text}")
 
@@ -40,7 +49,6 @@ class OllamaLLM:
 # ===== Custom Local Embeddings =====
 class LocalEmbeddings(Embeddings):
     def __init__(self):
-        from sentence_transformers import SentenceTransformer
         self.model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
@@ -70,7 +78,7 @@ def extract_text_from_pdf(pdf_file, document_name):
                 print(f"No text on page {i + 1} of {document_name}")
     return text_chunks
 
-# ===== Extract text from uploaded file (PDF, HTML, TXT). =====
+# ===== Extract text from uploaded file (PDF, HTML, TXT) =====
 def get_uploaded_text(uploaded_files):
     raw_text = []
     for uploaded_file in uploaded_files:
@@ -81,7 +89,7 @@ def get_uploaded_text(uploaded_files):
         elif uploaded_file.name.endswith((".html", ".htm")):
             soup = BeautifulSoup(uploaded_file.getvalue(), 'lxml')
             raw_text.append({"text": soup.get_text(), "page": None, "document": document_name})
-        elif uploaded_file.name.endswith((".txt")):
+        elif uploaded_file.name.endswith(".txt"):
             content = uploaded_file.getvalue().decode("utf-8")
             raw_text.append({"text": content, "page": None, "document": document_name})
     return raw_text
@@ -112,7 +120,6 @@ def set_global_vectorstore(vectorstore):
 
 # ===== Keyword Model =====
 def get_kw_model():
-    global kw_model
     if "kw_model" not in st.session_state:
         model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
         st.session_state.kw_model = KeyBERT(model=model)
@@ -125,17 +132,18 @@ def self_reasoning(query, context):
     You are an AI assistant that analyzes the context provided to answer the user's query comprehensively and clearly.
     Answer in a concise, factual way using the terminology from the context. Avoid extra explanation unless explicitly asked.
     YOU MUST mention the page number.
-    If the user asked for only the page number, then you MUST answe ONLY THE PAGE NUMBER
+    If the user asked for only the page number, then you MUST answer ONLY THE PAGE NUMBER
+
     ### Example 1:
     **Question:** What is the purpose of the MODTRAN GUI?
     **Context:**
-    [Page 10 of the docuemnt] The MODTRAN GUI helps users set parameters and visualize the model's output.
+    [Page 10 of the document] The MODTRAN GUI helps users set parameters and visualize the model's output.
     **Answer:** The MODTRAN GUI assists users in parameter setup and output visualization. You can find the answer at Page 10 of the document provided.
 
     ### Example 2:
     **Question:** How do you run MODTRAN on Linux? Answer with page number.
     **Context:**
-    [Page 15 of the docuemnt] On Linux systems, MODTRAN can be run using the `mod6c` binary via terminal.
+    [Page 15 of the document] On Linux systems, MODTRAN can be run using the `mod6c` binary via terminal.
     **Answer:** Use the `mod6c` binary via terminal. (Page 15 of the document)
 
     ### Now answer:
@@ -156,8 +164,9 @@ def faiss_search_with_keywords(query):
     keywords = kw_model.extract_keywords(query, keyphrase_ngram_range=(1, 2), stop_words='english', top_n=5)
     refined_query = " ".join([keyword[0] for keyword in keywords])
     retriever = vectorstore_global.as_retriever(search_kwargs={"k": 13})
-    docs = retriever.get_relevant_documents(refined_query)
-    context= '\n\n'.join([f"[Page {doc.metadata.get('page', 'Unknown')}] {doc.page_content}" for doc in docs])
+    # FIX 3: get_relevant_documents() removed — use .invoke() instead
+    docs = retriever.invoke(refined_query)
+    context = '\n\n'.join([f"[Page {doc.metadata.get('page', 'Unknown')}] {doc.page_content}" for doc in docs])
     return self_reasoning(query, context)
 
 def faiss_search_with_reasoning(query):
@@ -165,7 +174,8 @@ def faiss_search_with_reasoning(query):
     if vectorstore_global is None:
         raise ValueError("FAISS vectorstore is not initialized.")
     retriever = vectorstore_global.as_retriever(search_kwargs={"k": 13})
-    docs = retriever.get_relevant_documents(query)
+    # FIX 3 (same): get_relevant_documents() removed — use .invoke() instead
+    docs = retriever.invoke(query)
     pairs = [(query, doc.page_content) for doc in docs]
     scores = reranker.predict(pairs)
     reranked_docs = sorted(zip(scores, docs), key=lambda x: x[0], reverse=True)
@@ -189,18 +199,18 @@ faiss_reasoning_tool = Tool(
 # ===== User Query Handling =====
 def handle_user_query(query):
     if st.session_state.get("vectorstore"):
-        # Use FAISS-based tools
+        # FIX 4: faiss_search_* already call self_reasoning internally and return
+        # the final LLM answer — do NOT call self_reasoning again on the result.
         if "how" in query.lower():
-            context = faiss_search_with_reasoning(query)
+            return faiss_search_with_reasoning(query)
         else:
-            context = faiss_search_with_keywords(query)
+            return faiss_search_with_keywords(query)
     else:
-        # Use Wikipedia fallback
+        # Wikipedia fallback: raw text needs self_reasoning
         print("No documents uploaded — using Wikipedia instead.")
         wiki_docs = wikipedia.run(query)
         context = f"[Wikipedia] {wiki_docs}"
-
-    return self_reasoning(query, context)
+        return self_reasoning(query, context)
 
 # ===== Streamlit App =====
 def main():
@@ -248,3 +258,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

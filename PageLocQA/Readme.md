@@ -16,7 +16,6 @@ This repository contains a **Streamlit-based chatbot** that enables users to que
 ## Installation
 
 1. Clone the repository:
-   - git clone https://github.com/CADS-WSSU/Research/PagelocQA.git
    - cd PagelocQA
 2. Create and activate a virtual environment:
    - python -m venv venv
@@ -29,7 +28,7 @@ This repository contains a **Streamlit-based chatbot** that enables users to que
 1. Start the Ollama server locally (requires Ollama):
    ollama run llama3
 2. Launch the Streamlit app:
-   streamlit run app.py
+   python -m streamlit run app.py
 4. Upload one or more documents via the "Browse Files" button in the sidebar. Wait until the "Running" is done. Then press "Process". When you see "Files processed successfully", then use the chatbox and write your question.
 
 ## Acknowledgement 
