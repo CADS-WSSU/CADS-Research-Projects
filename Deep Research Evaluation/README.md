@@ -26,6 +26,14 @@ self-hosted open-source models against proprietary baselines on report quality.
 
 ---
 
+## Contents
+
+- **`mt_eval_kit/`** — the self-contained evaluator (copy it anywhere and run).
+- **`examples/`** — a minimal input plus the exact output the offline judge produces from it.
+- **`deep_research_reports/`** — the **16-report study corpus** (4 actors × 4 models) with a
+  ready-to-run `dataset.json`, so you can reproduce the scores. See its README.
+- **`LICENSE`** — MIT.
+
 ## Quick start (offline, no API key)
 
 ```bash
