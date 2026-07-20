@@ -1,0 +1,42 @@
+# MIGHTYTOASTER LLM Evaluation Framework — configuration
+#
+# `default_provider` is the judge LLM used when --provider is not passed.
+# Per-provider settings live under `providers:`; api_key/base_url default to the
+# matching environment variables when omitted.
+
+default_provider: deterministic
+
+# Global judge sampling defaults (deterministic: temperature 0 + fixed seed).
+temperature: 0.0
+max_tokens: 2048
+seed: 7
+max_retries: 4
+
+cache:
+  directory: .eval_cache   # on-disk JSON response cache (relative to CWD)
+
+providers:
+  anthropic:
+    model: claude-opus-4-8
+    # api_key: read from ANTHROPIC_API_KEY if unset
+
+  openai:
+    model: gpt-4o
+    # api_key: read from OPENAI_API_KEY if unset
+    # base_url: read from OPENAI_BASE_URL if unset
+
+  gemini:
+    model: gemini-1.5-pro
+    # api_key: read from GOOGLE_API_KEY if unset
+
+  ollama:
+    model: llama3.1            # any model your local Ollama server has pulled
+    base_url: http://localhost:11434
+
+  vllm:
+    model: vllm-local
+    base_url: http://localhost:8000/v1
+    api_key: EMPTY
+
+  deterministic:
+    model: deterministic       # offline deterministic judge; no key required

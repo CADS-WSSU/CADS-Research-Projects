@@ -1,0 +1,18 @@
+[
+  {
+    "question_id": "example_actor",
+    "question": "Produce a hunt-ready dossier on actor \"ExampleActor\": identity, attribution, TTPs mapped to MITRE ATT&CK, IOCs, timeline, hunting queries, mitigations, and intelligence gaps.",
+    "reports": [
+      {"model": "model-a", "answer": "ExampleActor is assessed with moderate confidence as a financially motivated group. Observed TTPs include spearphishing (T1566) and valid accounts (T1078). IOCs: evil[.]example domain (hunt). Timeline: first seen 2026-01. Mitigations: phishing-resistant MFA. Intelligence gaps: no malware samples, no confirmed attribution. [1]"},
+      {"model": "model-b", "answer": "ExampleActor. They do bad things on computers and steal data. Probably from somewhere. Use antivirus and strong passwords to stay safe. They use viruses and hacking tools."}
+    ]
+  },
+  {
+    "question_id": "example_actor_2",
+    "question": "Produce a hunt-ready dossier on malware \"ExampleRAT\": capabilities, IOCs, ATT&CK, detection, and gaps.",
+    "reports": [
+      {"model": "model-a", "answer": "ExampleRAT is a remote access trojan using DLL side-loading (T1574.002) and web-protocol C2 (T1071.001). Block hashes: abc123 (block). Detection: alert on rundll32 spawning from temp paths. Gaps: no config extraction available. [1][2]"},
+      {"model": "model-b", "answer": "ExampleRAT is malware. It controls computers remotely. Block it with a firewall."}
+    ]
+  }
+]

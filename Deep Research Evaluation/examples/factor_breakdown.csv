@@ -1,0 +1,5 @@
+question_id,model,evidence_support,coverage,utility,uncertainty,corpus_awareness,cti_quality,composite
+example_actor,model-a,3.1300,6.8000,3.3300,3.6700,2.0000,7.3300,4.4600
+example_actor,model-b,2.0000,2.0000,2.0000,2.0000,2.0000,2.0000,2.0000
+example_actor_2,model-a,3.2000,5.2000,4.6700,2.0000,2.0000,4.6700,3.8000
+example_actor_2,model-b,2.0000,2.0000,2.0000,2.0000,2.0000,2.0000,2.0000
