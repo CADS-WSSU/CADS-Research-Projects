@@ -1,0 +1,11 @@
+# Python 3.11+ (uses stdlib tomllib). Install cdet-api separately (git, see README):
+#   pip install --ignore-requires-python "git+https://github.com/trec-changedet/cdet-api"
+# On the GPU VM use the cu121 torch wheel (see setup_gpu.sh); on Mac, default torch + MPS.
+sentence-transformers>=2.2
+rank-bm25
+spacy>=3.7
+huggingface_hub
+numpy
+torch
+pytest
+# spaCy model (download after install):  python -m spacy download en_core_web_sm

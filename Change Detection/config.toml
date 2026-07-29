@@ -1,0 +1,94 @@
+# TREC 2026 Change Detection — final tuned configuration.
+#
+# Two submission systems share this file (see RUN_GUIDE.md):
+#   LOCAL (LLM-free)  — exactly as configured below (llm_rescue = false).
+#   LLM               — set [relevance].llm_rescue = true (adds the leak-free rescue stage);
+#                        also change [run].runtag to the LLM runtag.
+#
+# Every value below is the FINAL operating point. Settings we tested and REJECTED are grouped
+# at the end of their section, explicitly held at their OFF value with a one-line note, so the
+# file is reproducible and the negative results stay traceable. Do NOT enable them for a run.
+
+[run]
+runtag = "ncsu-local"           # <=20 chars, ^[a-zA-Z0-9_-][a-zA-Z0-9_.-]{1,20}$  (LLM run: "ncsu-llm")
+description = "Local LLM-free change detection: bge-small cosine prefilter -> bge-reranker-v2-m3 cross-encoder relevance gate (+ rank-aware ensemble) -> memory-based novelty (cosine + new terms + new entities) -> metric-aware policy (silence on nil days; truncate, never pad) with per-question background z-score question ranking."
+run_type = "automatic"
+extern = "Local models only; no external corpora. Bi-encoder BAAI/bge-small-en-v1.5 (cosine prefilter + novelty memory), cross-encoder BAAI/bge-reranker-v2-m3 (relevance gate), spaCy en_core_web_sm (novelty NER). The LLM run additionally uses a leak-free Claude (Sonnet-4.5 via the LAS gateway) for a relevance-rescue stage only."
+
+[server]
+base_url = "http://127.0.0.1:8009"
+api_key = "abc123"
+
+[relevance]
+method = "reranker"                     # bi-encoder cosine prefilter -> cross-encoder reranker gate
+model = "BAAI/bge-small-en-v1.5"        # bi-encoder (embeddings + cosine prefilter + novelty memory)
+device = "cuda"                          # "cuda" on the GPU VM
+batch_size = 64
+reranker_model = "BAAI/bge-reranker-v2-m3"
+reranker_bf16 = true                   # bf16 reranker inference (~3-4x on Ada/L4; verified decision-identical to fp32). Throughput only.
+reranker_batch_size = 64                # cross-encoder predict batch size
+prefilter_n = 20                        # rerank the top-N cosine candidates (relevant docs ~89% in top-10)
+chunk_chars = 1800                      # chunked-passage length for the reranker
+chunk_overlap = 300
+max_chunks = 3                          # cap chunks/doc to bound cost
+threshold = 0.10                        # reranker relevance bar (a doc clearing this is a candidate)
+clean_text = true                       # strip boilerplate before reranking
+# rank-aware ensemble: also admit a top-cosine doc with a moderate reranker score (recovers
+# rank-1 relevant docs the reranker under-scores) — part of the final tuned pipeline.
+ensemble_cos_rank = 3
+ensemble_min_prob = 0.05
+
+# ---- LLM system only (leak-free Claude rescue; OFF for the local run) --------------------
+# Rescue: for the top-K cosine docs the reranker rejects, a Claude judge grades topical
+# importance 0/1/5/10 and admits at grade >= admit_gain. Disk-cached; can be parallel-warmed.
+llm_rescue = false                      # LOCAL run: false.  LLM run: true.
+llm_rescue_top_k = 3
+llm_rescue_admit_gain = 5               # TUNED: g>=5 (g>=1 over-fires nil days and collapses silence)
+llm_rescue_model = "bedrock/us.anthropic.claude-sonnet-5"   # us. profile authorized (temp-1 only; handled by fallback)
+llm_doc_chars = 1800
+# tested & rejected — keep OFF (note: llm_rescue_confirm defaults True in code, so pin it false):
+llm_rescue_confirm = false              # two-model AND-gate: hurt recall, no silence gain
+llm_grade_reported = false              # Job B (Opus grade-at-report): metric-neutral, not worth it
+
+[novelty]
+# novelty = w_cos*(1 - max_cosine_to_memory) + w_terms*frac_new_terms + w_ents*frac_new_entities
+w_cos = 0.5
+w_terms = 0.25
+w_ents = 0.25
+threshold = 0.5                         # min novelty to count a doc as a genuine update
+spacy_model = "en_core_web_sm"
+
+[policy]
+# Task gain (TREC 0/1/5/10) = importance combined with novelty. Novel -> gain = importance;
+# restatement -> gain = min(importance, restatement_gain_cap).
+restatement_gain_cap = 1.0              # TUNED: report on-topic restatements at gain 1 (0.0 tested worse)
+max_docs_per_question = 100             # hard cap from the toolkit
+novelty_top_k = 50                      # score novelty only on the top-K relevance candidates
+# FINAL WIN — primary (question-ranking) metric: rank fired questions by the z-score of the day's
+# peak relevance vs the question's OWN past-days background (cross-question comparable, leakage-safe).
+question_zscore_rank = true
+zscore_min_bg = 8                       # cold-start: need this many past days before z applies
+# tested & rejected — keep OFF:
+question_zscore_gate = false            # z-gate firing: recall collapse
+question_top_k = 0                      # question-ranking truncation: hurt the primary metric
+corroboration_boost = false             # burst prior: inert (per-question sets too sparse to cluster)
+corroboration_gate = false              # singleton gate: catastrophic recall loss
+
+[propose]
+# Optional NEW-QUESTION proposal (LLM system only; generative). Off by default. Clusters on-topic
+# docs no existing question covers; a leak-free Claude phrases one new question if warranted.
+# Proposed qids are runtag-prefixed (track rule). See RUN_GUIDE.md.
+enable = false
+topic_cos_thr = 0.35
+cluster_cos_thr = 0.75
+min_cluster = 3
+dedup_cos_thr = 0.85
+max_per_topic_per_day = 1
+model = ""                              # empty -> reuse [relevance].llm_rescue_model
+doc_chars = 700
+n_docs_shown = 6
+
+[paths]
+docs_db = "docs.db"
+embeddings_cache = "embeddings_cache"
+state_dir = "state"                     # token + per-question memory (resumable)
