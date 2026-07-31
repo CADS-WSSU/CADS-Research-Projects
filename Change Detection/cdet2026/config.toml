@@ -44,6 +44,13 @@ w_terms = 0.25
 w_ents = 0.25
 threshold = 0.5                 # min novelty to accept a doc as a genuine update (tuned in M6)
 spacy_model = "en_core_web_sm"
+# novelty A/B levers (default OFF = baseline). A=as_signal (additive, no cap); B=zcalib
+# (per-question z-scored novelty). Toggle per-run via score_gold_task --nov-signal/--nov-zcalib.
+as_signal = true                # A: ADOPTED (additive novelty, never demotes; +0.0025 doc has-ans AP')
+zcalib = false                  # B: rejected (0.00000 effect)
+boost = 2.0
+z_thr = 0.0
+z_min_bg = 8
 
 [policy]
 # Combined score = combine_rel*relevance + combine_nov*novelty

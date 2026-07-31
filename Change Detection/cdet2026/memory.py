@@ -28,6 +28,12 @@ class QuestionMemory:
         self.bg_n: int = 0
         self.bg_mean: float = 0.0
         self.bg_M2: float = 0.0
+        # per-question background of NOVELTY values (Welford), so a doc's novelty can be
+        # judged relative to this question's own novelty distribution rather than a global
+        # threshold (novelty idea B: zcalib). Updated from PAST days only.
+        self.nov_bg_n: int = 0
+        self.nov_bg_mean: float = 0.0
+        self.nov_bg_M2: float = 0.0
 
     @property
     def is_empty(self) -> bool:
@@ -51,6 +57,27 @@ class QuestionMemory:
         d = x - self.bg_mean
         self.bg_mean += d / self.bg_n
         self.bg_M2 += d * (x - self.bg_mean)
+
+    # --- novelty background (idea B: per-question novelty z-calibration) -----------------
+    @property
+    def nov_bg_std(self) -> float:
+        return (self.nov_bg_M2 / (self.nov_bg_n - 1)) ** 0.5 if self.nov_bg_n > 1 else 0.0
+
+    def nov_zscore(self, x: float, min_bg: int) -> float | None:
+        """A novelty value's deviation from this question's own past novelty distribution,
+        in std units. None until `min_bg` past novelty observations have accumulated."""
+        if self.nov_bg_n < min_bg:
+            return None
+        sd = self.nov_bg_std
+        return (x - self.nov_bg_mean) / sd if sd > 1e-9 else 0.0
+
+    def update_nov_bg(self, x: float) -> None:
+        """Fold a novelty observation into the running novelty background (call AFTER
+        computing nov_zscore, to keep it PAST-only)."""
+        self.nov_bg_n += 1
+        d = x - self.nov_bg_mean
+        self.nov_bg_mean += d / self.nov_bg_n
+        self.nov_bg_M2 += d * (x - self.nov_bg_mean)
 
     def working_copy(self) -> tuple[list, set, set]:
         """Mutable snapshot (embeddings list, term set, entity set) for within-day

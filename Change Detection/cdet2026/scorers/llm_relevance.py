@@ -108,6 +108,13 @@ class LLMJudge:
         if dh in hit:
             self.cache_hits += 1
             return int(hit[dh])
+        # CACHE-ONLY guard: never spend on a miss (used to reproduce a past cached run
+        # safely). A miss returns grade 0 (= not admitted) and is counted for diagnostics.
+        if __import__("os").environ.get("CDET_CACHE_ONLY"):
+            self._misses = getattr(self, "_misses", 0) + 1
+            if self._misses % 200 == 0:
+                __import__("sys").stderr.write(f"  [LLMJudge:{self.role}] CACHE-ONLY misses={self._misses} hits={self.cache_hits}\n")
+            return 0
         g = self._call(question, doc_text)
         self.cache.put_many(qh, {dh: g})
         self.calls += 1

@@ -130,39 +130,71 @@ def decide_question(
             c.relevance = max(c.relevance, g / 10.0)
             rel_pass.append(c)
 
-    # idea B: per-question background calibration. Signal = the day's PEAK relevance for
-    # this question (post-rescue). z vs the question's own past background makes firing and
-    # ranking scale-invariant across questions. z uses PAST days only; fold today in after.
+    # idea B: per-question background calibration. Signal = the day's PEAK signal for this
+    # question (post-rescue). z vs the question's own past background makes firing and ranking
+    # scale-invariant across questions. z uses PAST days only; fold today in after.
     pcfg = cfg["policy"]
     z_rank = pcfg.get("question_zscore_rank", False)
     z_gate = pcfg.get("question_zscore_gate", False)
+    # NOVELTY-AWARE z-rank: build the day signal from docs that are relevant AND novel vs the
+    # question's own history, so restatement-only days rank/fire below genuine-update days
+    # (targets the primary question metric, which pure-relevance z-rank cannot move).
+    zrank_nov = pcfg.get("zrank_novelty", False)
+    zrank_alpha = float(pcfg.get("zrank_nov_alpha", 0.5))
+    zrank_mode = pcfg.get("zrank_signal", "blend")           # blend | product
+    top_k = int(cfg["policy"].get("novelty_top_k", 50))
+
+    def _score_novelty(items) -> None:
+        """Set c.novelty for items vs memory + docs seen earlier today (keep-first within-day)."""
+        if hasattr(nov_scorer, "novelty_against"):
+            nov_scorer.attach_features(items)
+            work_embs, work_terms, work_ents = memory.working_copy()
+            for c in sorted(items, key=lambda c: c.date):    # earliest published first
+                c.novelty = nov_scorer.novelty_against(
+                    c.embedding, c.extra["terms"], c.extra["entities"], work_embs, work_terms, work_ents)
+                if c.novelty >= nov_thr:
+                    work_embs.append(c.embedding)
+                    work_terms |= c.extra["terms"]; work_ents |= c.extra["entities"]
+        else:  # fallback for a swapped-in novelty scorer without incremental support
+            nov_scorer.score_day(memory, items)
+
+    # Novelty-aware z-rank needs novelty BEFORE the day signal, so bound to top-K and score it
+    # now (the later novelty step then skips). Silence-preserving: nil days have empty rel_pass
+    # and still fold a 0.0 signal into the background.
+    nov_done = False
+    if (z_rank or z_gate) and zrank_nov and rel_pass:
+        rel_pass.sort(key=lambda c: c.relevance, reverse=True)
+        rel_pass = rel_pass[:top_k]
+        _score_novelty(rel_pass)
+        nov_done = True
+
     z = None
     if z_rank or z_gate:
-        day_signal = max((c.relevance for c in candidates), default=0.0)
+        if zrank_nov:
+            if rel_pass:
+                if zrank_mode == "product":
+                    day_signal = max(c.relevance * c.novelty for c in rel_pass)
+                else:                                        # blend
+                    day_signal = max(zrank_alpha * c.relevance + (1.0 - zrank_alpha) * c.novelty
+                                     for c in rel_pass)
+            else:
+                day_signal = 0.0
+        else:
+            day_signal = max((c.relevance for c in candidates), default=0.0)
         z = memory.zscore(day_signal, int(pcfg.get("zscore_min_bg", 8)))
         memory.update_bg(day_signal)
 
     if not rel_pass:
         return QuestionDecision(qid, question_text, [])  # correct silence: nothing relevant
-    # Bound novelty/NER work to the top-K by relevance (deeper docs are never reported).
-    top_k = int(cfg["policy"].get("novelty_top_k", 50))
-    rel_pass.sort(key=lambda c: c.relevance, reverse=True)
-    rel_pass = rel_pass[:top_k]
 
-    # 2) Novelty: set each candidate's novelty vs memory + docs seen earlier today (the
-    #    "today/new" dimension of the gain). Novel docs also update the within-day working
-    #    memory so a later same-day near-duplicate reads as non-novel (keep-first).
-    if hasattr(nov_scorer, "novelty_against"):
-        nov_scorer.attach_features(rel_pass)
-        work_embs, work_terms, work_ents = memory.working_copy()
-        for c in sorted(rel_pass, key=lambda c: c.date):  # earliest published first
-            c.novelty = nov_scorer.novelty_against(
-                c.embedding, c.extra["terms"], c.extra["entities"], work_embs, work_terms, work_ents)
-            if c.novelty >= nov_thr:
-                work_embs.append(c.embedding)
-                work_terms |= c.extra["terms"]; work_ents |= c.extra["entities"]
-    else:  # fallback for a swapped-in novelty scorer without incremental support
-        nov_scorer.score_day(memory, rel_pass)
+    # Bound novelty/NER work to the top-K by relevance, then score novelty (skip if the
+    # novelty-aware z-rank path already did it above).
+    if not nov_done:
+        rel_pass.sort(key=lambda c: c.relevance, reverse=True)
+        rel_pass = rel_pass[:top_k]
+        # 2) Novelty: set each candidate's novelty vs memory + docs seen earlier today (the
+        #    "today/new" dimension of the gain).
+        _score_novelty(rel_pass)
 
     # idea C: corroboration / burst prior. Cluster today's relevant candidates by embedding
     # cosine; a candidate echoed by several distinct docs is a corroborated burst (vital),
@@ -199,6 +231,38 @@ def decide_question(
         r = c.relevance
         return 10.0 if r >= 0.8 else 5.0 if r >= 0.5 else 1.0
 
+    # --- novelty A/B levers (default OFF -> baseline gate/cap behavior preserved) ---------
+    #   A (as_signal): novelty stops CAPPING gain; instead it ADDITIVELY boosts the ranking
+    #     score (never demotes a relevant doc). Restated-but-relevant docs keep importance.
+    #   B (zcalib): the novelty criterion is the doc's novelty z-scored against this
+    #     question's OWN past novelty distribution, not a global absolute threshold.
+    ncfg = cfg["novelty"]
+    as_signal = bool(ncfg.get("as_signal", False))
+    zcalib = bool(ncfg.get("zcalib", False))
+    nov_boost = float(ncfg.get("boost", 2.0))
+    nov_z_thr = float(ncfg.get("z_thr", 0.0))
+    nov_z_min_bg = int(ncfg.get("z_min_bg", 8))
+
+    # (B) per-doc novelty z vs the question's own history; fold today's novelty in AFTER
+    #     (past-only). When z is unavailable (cold-start) fall back to the absolute criterion.
+    if zcalib:
+        for c in rel_pass:
+            c.extra["nov_z"] = memory.nov_zscore(c.novelty, nov_z_min_bg)
+        for c in rel_pass:
+            memory.update_nov_bg(c.novelty)
+
+    def _is_novel(c) -> bool:
+        if zcalib and c.extra.get("nov_z") is not None:
+            return c.extra["nov_z"] >= nov_z_thr
+        return c.novelty >= nov_thr
+
+    def _nov_strength(c) -> float:
+        """Novelty magnitude in ~[0,1] for the additive boost (A)."""
+        z = c.extra.get("nov_z") if zcalib else None
+        if z is not None:
+            return 1.0 / (1.0 + np.exp(-z))          # squashed z -> (0,1)
+        return float(c.novelty)
+
     corr_vital = int(pcfg.get("corr_vital_cluster", 4))
     for c in rel_pass:
         imp = _importance(c)
@@ -208,7 +272,12 @@ def decide_question(
                 imp = max(imp, 10.0)
             elif cl >= corr_min:
                 imp = max(imp, 5.0)
-        c.combined = imp if c.novelty >= nov_thr else min(imp, restat_cap)
+        if as_signal:
+            # A: novelty only ADDS to the ranking score; a relevant doc is never demoted.
+            c.combined = imp + nov_boost * _nov_strength(c)
+        else:
+            # baseline / B: novel -> full importance; restatement -> capped to restat_cap.
+            c.combined = imp if _is_novel(c) else min(imp, restat_cap)
 
     reported = [c for c in rel_pass if c.combined >= 1.0]     # drop capped-to-0 restatements
     # corroboration gate: drop singleton reports (uncorroborated -> likely noise). Only

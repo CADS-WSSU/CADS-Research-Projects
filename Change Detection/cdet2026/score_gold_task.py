@@ -84,9 +84,60 @@ def main():
     ap.add_argument("--dump-rankings", default=None,
                     help="dump each provider's rankings (JSON) so a run can be re-scored per-topic "
                          "later without re-running the model")
+    # novelty A/B experiment overrides (override config so a variant needs no config edit)
+    ap.add_argument("--nov-signal", action="store_true", help="A: novelty as additive ranking signal (no cap)")
+    ap.add_argument("--nov-zcalib", action="store_true", help="B: per-question z-calibrated novelty criterion")
+    ap.add_argument("--nov-boost", type=float, default=None, help="A: additive novelty boost weight (default cfg/2.0)")
+    ap.add_argument("--nov-z-thr", type=float, default=None, help="B: novelty z threshold for 'novel' (default cfg/0.0)")
+    ap.add_argument("--no-nov-signal", action="store_true", help="force A off (override config default)")
+    # novelty-aware z-rank overrides
+    ap.add_argument("--zrank-novelty", action="store_true", help="novelty-aware z-rank day signal")
+    ap.add_argument("--zrank-alpha", type=float, default=None, help="blend weight: alpha*rel + (1-alpha)*nov")
+    ap.add_argument("--zrank-mode", choices=["blend", "product"], default=None, help="zrank signal combiner")
+    ap.add_argument("--oracle-answers-dir", default=None,
+                    help="ORACLE (leaky, ceiling probe): dir of nugget files NNNN.json; expand the "
+                         "RERANKER query with each question's human acceptable-answers. Invalidates "
+                         "the reranker cache -> full GPU re-run. Never ship (uses gold answers).")
     args = ap.parse_args()
 
     cfg = load_config()
+    if args.nov_signal:
+        cfg["novelty"]["as_signal"] = True
+    if args.no_nov_signal:
+        cfg["novelty"]["as_signal"] = False
+    if args.nov_zcalib:
+        cfg["novelty"]["zcalib"] = True
+    if args.nov_boost is not None:
+        cfg["novelty"]["boost"] = args.nov_boost
+    if args.nov_z_thr is not None:
+        cfg["novelty"]["z_thr"] = args.nov_z_thr
+    if args.zrank_novelty:
+        cfg["policy"]["zrank_novelty"] = True
+    if args.zrank_alpha is not None:
+        cfg["policy"]["zrank_nov_alpha"] = args.zrank_alpha
+    if args.zrank_mode is not None:
+        cfg["policy"]["zrank_signal"] = args.zrank_mode
+    print(f"novelty levers: as_signal={cfg['novelty'].get('as_signal', False)} "
+          f"zcalib={cfg['novelty'].get('zcalib', False)} "
+          f"boost={cfg['novelty'].get('boost', 2.0)} z_thr={cfg['novelty'].get('z_thr', 0.0)} "
+          f"| zrank_novelty={cfg['policy'].get('zrank_novelty', False)} "
+          f"alpha={cfg['policy'].get('zrank_nov_alpha', 0.5)} "
+          f"mode={cfg['policy'].get('zrank_signal', 'blend')}", flush=True)
+
+    # ORACLE query expansion (ceiling probe): {(tid, question_text) -> acceptable-answers string}
+    oracle_ans = {}
+    if args.oracle_answers_dir:
+        for f in Path(args.oracle_answers_dir).glob("*.json"):
+            nj = json.load(open(f))
+            tid = str(nj.get("topic_id", f.stem))
+            for nug in nj.get("nuggets", []):
+                qt = nug.get("question", "")
+                ans = [a.strip() for a in nug.get("answers", [])
+                       if a and a.strip().lower() != "other"]
+                if qt and ans:
+                    oracle_ans[(tid, qt)] = "; ".join(ans)
+        print(f"ORACLE: loaded acceptable-answers for {len(oracle_ans)} questions "
+              f"(reranker query = question + answers)", flush=True)
     ds = Path(args.dataset)
     gold, topics = load_gold(ds)
     db.connect(reuse_if_open=True)
@@ -151,7 +202,11 @@ def main():
             docs = docs_for(day)
             decisions = []
             for q in t["questions"]:
-                rq = build_relevance_query(cfg, t, q["question"])
+                ans = oracle_ans.get((tid, q["question"]))
+                if ans is not None:                                  # ORACLE: expand reranker query
+                    rq = q["question"] + "\nAcceptable answers: " + ans
+                else:
+                    rq = build_relevance_query(cfg, t, q["question"])
                 dec = decide_question(cfg, rel, nov, mems[q["qid"]], q["qid"], q["question"],
                                       docs, relevance_query=rq)
                 decisions.append(dec)

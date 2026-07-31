@@ -57,6 +57,16 @@ w_terms = 0.25
 w_ents = 0.25
 threshold = 0.5                         # min novelty to count a doc as a genuine update
 spacy_model = "en_core_web_sm"
+# --- novelty A/B levers (experiment; default OFF = baseline gate/cap behavior) ------------
+# A: novelty stops CAPPING the ranking score and instead ADDITIVELY boosts it (never demotes
+#    a relevant doc). B: judge novelty by its z-score vs the question's OWN past novelty
+#    distribution, not the global absolute threshold. Toggle per-run via score_gold_task
+#    --nov-signal / --nov-zcalib / --nov-boost / --nov-z-thr.
+as_signal = true                        # A: ADOPTED — additive novelty (no cap); +0.0025 doc has-ans AP', never hurts
+zcalib = false                          # B: rejected — 0.00000 effect on every metric
+boost = 2.0                             # A: additive novelty boost weight (combined = importance + boost*novelty)
+z_thr = 0.0                             # B: novelty z threshold to count as 'novel'
+z_min_bg = 8                            # B: min past novelty observations before z applies (cold-start fallback)
 
 [policy]
 # Task gain (TREC 0/1/5/10) = importance combined with novelty. Novel -> gain = importance;
@@ -68,6 +78,12 @@ novelty_top_k = 50                      # score novelty only on the top-K releva
 # peak relevance vs the question's OWN past-days background (cross-question comparable, leakage-safe).
 question_zscore_rank = true
 zscore_min_bg = 8                       # cold-start: need this many past days before z applies
+# NOVELTY-AWARE z-rank (experiment): build the day signal from docs relevant AND novel vs the
+# question's history, so restatement-only days rank/fire below genuine-update days. Toggle per-run
+# via score_gold_task --zrank-novelty / --zrank-alpha / --zrank-mode.
+zrank_novelty = false                   # default OFF (pure-relevance z-rank)
+zrank_nov_alpha = 0.5                   # blend: alpha*relevance + (1-alpha)*novelty
+zrank_signal = "blend"                  # blend | product
 # tested & rejected — keep OFF:
 question_zscore_gate = false            # z-gate firing: recall collapse
 question_top_k = 0                      # question-ranking truncation: hurt the primary metric
