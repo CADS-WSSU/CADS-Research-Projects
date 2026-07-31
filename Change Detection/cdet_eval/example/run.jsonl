@@ -1,2 +1,0 @@
-{"runtag": "example-run", "run_type": "automatic", "description": "tiny demo run", "models": ["demo"], "extern": "none"}
-{"topic": "1001", "results": {"2023-05-02": {"results": [{"qid": "q_1", "question_rank": 0, "doc_ranking": [{"doc_id": "docA", "score": 0.9}, {"doc_id": "docB", "score": 0.7}]}, {"qid": "q_2", "question_rank": 1, "doc_ranking": [{"doc_id": "docX", "score": 0.5}, {"doc_id": "docD", "score": 0.4}]}]}, "2023-05-04": {"results": [{"qid": "q_1", "question_rank": 0, "doc_ranking": [{"doc_id": "docC", "score": 0.8}]}]}}}
